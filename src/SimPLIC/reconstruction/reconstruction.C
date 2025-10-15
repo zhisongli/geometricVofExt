@@ -70,6 +70,45 @@ Foam::geometricVofExt::SimPLIC::reconstruction::validOrientationMethods_ =
 
 // * * * * * * * * * * * * Private Member Functions  * * * * * * * * * * * * //
 
+bool Foam::geometricVofExt::SimPLIC::reconstruction::alreadyReconstructed
+(
+    bool forceUpdate
+) const
+{
+    const Time& runTime = alpha1_.mesh().time();
+
+    label& curTimeIndex = timeIndexAndIter_.first();
+    label& curIter = timeIndexAndIter_.second();
+
+    // Reset timeIndex and curIter
+    if (curTimeIndex < runTime.timeIndex())
+    {
+        curTimeIndex = runTime.timeIndex();
+        curIter = 0;
+        return false;
+    }
+
+    if (forceUpdate)
+    {
+        curIter = 0;
+        return false;
+    }
+
+    // Always reconstruct when subcycling
+    if (runTime.subCycling() != 0)
+    {
+        return false;
+    }
+
+    ++curIter;
+    if (curIter > 1)
+    {
+        return true;
+    }
+
+    return false;
+}
+
 
 void Foam::geometricVofExt::SimPLIC::reconstruction::calcInterfaceNFromRegAlphaGrad()
 {
@@ -88,22 +127,16 @@ void Foam::geometricVofExt::SimPLIC::reconstruction::calcInterfaceNFromIsoAlphaG
 
     leastSquareGrad<scalar> lsGrad("polyDegree1", mesh_.geometricD());
 
-    boolList isMixedCell(mesh_.nCells(), false);
-    forAll(mixedCells_, i)
-    {
-        isMixedCell[mixedCells_[i]] = true;
-    }
-
     zoneDistribute& exchangeFields = zoneDistribute::New(mesh_);
-    exchangeFields.setUpCommforZone(isMixedCell, true);
+    exchangeFields.setUpCommforZone(interfaceCell_, true);
 
     Map<vector> mapCC
     (
-        exchangeFields.getDatafromOtherProc(isMixedCell, mesh_.C())
+        exchangeFields.getDatafromOtherProc(interfaceCell_, mesh_.C())
     );
     Map<scalar> mapAlpha
     (
-        exchangeFields.getDatafromOtherProc(isMixedCell, alpha1_)
+        exchangeFields.getDatafromOtherProc(interfaceCell_, alpha1_)
     );
 
     DynamicField<vector> cellCentre(100);
@@ -144,22 +177,21 @@ void Foam::geometricVofExt::SimPLIC::reconstruction::calcInterfaceNFromIsoAlphaG
 void Foam::geometricVofExt::SimPLIC::reconstruction::isoInterfaceGrad
 (
     const volScalarField& phi,
-    boolList& isMixedCell,
     DynamicField<vector>& interfaceNormal
 )
 {
     leastSquareGrad<scalar> lsGrad("polyDegree1", mesh_.geometricD());
     zoneDistribute& exchangeFields = zoneDistribute::New(mesh_);
 
-    exchangeFields.setUpCommforZone(isMixedCell, false);
+    exchangeFields.setUpCommforZone(interfaceCell_, false);
 
     Map<vector> mapCC
     (
-        exchangeFields.getDatafromOtherProc(isMixedCell, mesh_.C())
+        exchangeFields.getDatafromOtherProc(interfaceCell_, mesh_.C())
     );
     Map<scalar> mapAlpha
     (
-        exchangeFields.getDatafromOtherProc(isMixedCell, phi)
+        exchangeFields.getDatafromOtherProc(interfaceCell_, phi)
     );
 
     DynamicField<vector> cellCentre(100);
@@ -210,17 +242,11 @@ void Foam::geometricVofExt::SimPLIC::reconstruction::calcInterfaceNFromIsoRDF()
 
     zoneDistribute& exchangeFields(zoneDistribute::New(mesh_));
 
-    boolList isMixedCell(mesh_.nCells(), false);
-    forAll(mixedCells_, i)
-    {
-        isMixedCell[mixedCells_[i]] = true;
-    }
-
-    RDF.markCellsNearSurf(isMixedCell, 1);
+    RDF.markCellsNearSurf(interfaceCell_, 1);
     const boolList& nextToInterface(RDF.nextToInterface());
     exchangeFields.updateStencil(nextToInterface);
 
-    isoInterfaceGrad(alpha1_, isMixedCell, interfaceNormal);
+    isoInterfaceGrad(alpha1_, interfaceNormal);
     // ************************************************************************
 
     // RDF iterations *********************************************************
@@ -267,12 +293,12 @@ void Foam::geometricVofExt::SimPLIC::reconstruction::calcInterfaceNFromIsoRDF()
 
             RDF.updateContactAngle(alpha1_, U, nHatb);
 
-            isoInterfaceGrad(RDF, isMixedCell, interfaceNormal);
+            isoInterfaceGrad(RDF, interfaceNormal);
 
             // Calculate residual
             Map<vector> mapNormal
             (
-                exchangeFields.getDatafromOtherProc(isMixedCell, interfaceN_)
+                exchangeFields.getDatafromOtherProc(interfaceCell_, interfaceN_)
             );
 
             const labelListList& stencil(exchangeFields.getStencil());
@@ -583,6 +609,8 @@ Foam::geometricVofExt::SimPLIC::reconstruction::reconstruction
         dimensionedScalar(dimless, 0.0)
     ),
 
+    interfaceCell_(alpha1_.mesh().nCells(), false),
+
     //
     //orientation_(orientationSchemes::New(alpha1_, interfaceN_, mixedCells_, dict)),
 
@@ -603,7 +631,8 @@ Foam::geometricVofExt::SimPLIC::reconstruction::reconstruction
         interfaceD_,
         interfaceC_,
         interfaceS_
-    )
+    ),
+    timeIndexAndIter_(0, 0)
 {
     clearInterfaceData();
 
@@ -633,6 +662,16 @@ Foam::geometricVofExt::SimPLIC::reconstruction::reconstruction
 
 void Foam::geometricVofExt::SimPLIC::reconstruction::initialize()
 {
+    if (mesh_.topoChanging())
+    {
+        // Introduced resizing to cope with changing meshes
+        if (interfaceCell_.size() != mesh_.nCells())
+        {
+            interfaceCell_.resize(mesh_.nCells());
+        }
+    }
+    interfaceCell_ = false;
+
     clearInterfaceData();
 
     interfaceN_ == dimensionedVector(dimless/dimLength, Zero);
@@ -656,6 +695,7 @@ void Foam::geometricVofExt::SimPLIC::reconstruction::initialize()
             if (isAMixedCell(celli) && cellTypes[celli]==cellCellStencil::CALCULATED)
             {
                 mixedCells_.append(celli);
+                interfaceCell_[celli] = true;
                 cellStatus_.append(-100);
             }
         }
@@ -667,6 +707,7 @@ void Foam::geometricVofExt::SimPLIC::reconstruction::initialize()
             if (isAMixedCell(celli))
             {
                 mixedCells_.append(celli);
+                interfaceCell_[celli] = true;
                 cellStatus_.append(-100);
             }
         }
@@ -677,8 +718,15 @@ void Foam::geometricVofExt::SimPLIC::reconstruction::initialize()
 }
 
 
-void Foam::geometricVofExt::SimPLIC::reconstruction::reconstruct()
+void Foam::geometricVofExt::SimPLIC::reconstruction::reconstruct(bool forceUpdate)
 {
+    const bool uptodate = alreadyReconstructed(forceUpdate);
+
+    if (uptodate && !forceUpdate)
+    {
+        return;
+    }
+
     const scalar startTime(mesh_.time().elapsedCpuTime());
 
     initialize();
@@ -711,6 +759,23 @@ void Foam::geometricVofExt::SimPLIC::reconstruction::reconstruct()
     {
         cellStatus_[i] =
             cutCell_.findSignedDistance(mixedCells_[i], splitWarpedFace_);
+        
+        if (cellStatus_[i] == 0)
+        {
+            if(mag(interfaceN_.ref()[mixedCells_[i]]) <= SMALL)
+            {
+                interfaceCell_[mixedCells_[i]] = false;
+            }
+        }
+        else
+        {
+            interfaceCell_[mixedCells_[i]] = false;
+
+            interfaceN_.primitiveFieldRef()[mixedCells_[i]] = Zero;
+            interfaceD_.primitiveFieldRef()[mixedCells_[i]] = Zero;
+            interfaceC_.primitiveFieldRef()[mixedCells_[i]] = Zero;
+            interfaceS_.primitiveFieldRef()[mixedCells_[i]] = Zero;
+        }
     }
 
     interfaceD_.correctBoundaryConditions();

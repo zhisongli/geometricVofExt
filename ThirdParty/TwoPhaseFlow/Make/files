@@ -1,0 +1,79 @@
+/* * * * * * * * * * * TwoPhaseFlow --> thermoDynamics * * * * * * * * * * * */
+thermoDynamics/fluidThermo/fluidThermos.C
+
+thermoDynamics/twoPhaseModelThermo/twoPhaseMixtureThermo.C
+thermoDynamics/twoPhaseModelThermo/phaseModel/phaseModel/phaseModel.C
+thermoDynamics/twoPhaseModelThermo/phaseModel/phaseModel/phaseModelNew.C
+thermoDynamics/twoPhaseModelThermo/phaseModel/phaseModel/phaseModels.C
+thermoDynamics/twoPhaseModelThermo/twoPhaseModelThermo.C
+/* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
+
+
+/* * * * * * * * * * * TwoPhaseFlow --> turbulence * * * * * * * * * * * * * */
+turbulence/VoFphaseCompressibleTurbulenceModels/VoFphaseCompressibleTurbulenceModels.C
+turbulence/VoFphaseCompressibleTurbulenceModels/compressibleInterPhaseTransportModel.C
+/* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
+
+
+/* * * * * * * * * * * TwoPhaseFlow --> phaseChange  * * * * * * * * * * * * */
+phaseChange/interfaceDiffFlux/implicitInterfaceDiffFlux/implicitInterfaceDiffFlux.C
+phaseChange/interfaceDiffFlux/explicitInterfaceDiffFlux/explicitInterfaceDiffFlux.C
+
+phaseChange/phaseChangeModels/energySourceTermModel/energySourceTermModel.C
+phaseChange/phaseChangeModels/energySourceTermModel/newEnergySourceTermModel.C
+phaseChange/phaseChangeModels/energySourceTermModel/selectedGradExplicit/selectedGradExplicit.C
+phaseChange/phaseChangeModels/energySourceTermModel/implicitGrad/implicitGrad.C
+phaseChange/phaseChangeModels/energySourceTermModel/Schrage/Schrage.C
+
+phaseChange/phaseChangeModels/massSourceTermModel/massSourceTermModel.C
+phaseChange/phaseChangeModels/massSourceTermModel/newMassSourceTermModel.C
+phaseChange/phaseChangeModels/massSourceTermModel/hardtWondra/hardtWondra.C
+phaseChange/phaseChangeModels/massSourceTermModel/hardtWondraGasPhase/hardtWondraGasPhase.C
+phaseChange/phaseChangeModels/massSourceTermModel/noPhaseChange/noPhaseChange.C
+
+phaseChange/phaseChangeModels/macroModels/macroModel.C
+phaseChange/phaseChangeModels/macroModels/macroModels.C
+phaseChange/phaseChangeModels/macroModels/directEvaporation/directEvaporation.C
+
+phaseChange/phaseChangeModels/singleComponentPhaseChange/singleComponentPhaseChange.C
+
+phaseChange/saturationProperties/singleComponentSatProp/newSingleComponentSatProp.C
+phaseChange/saturationProperties/singleComponentSatProp/singleComponentSatProp.C
+phaseChange/saturationProperties/singleComponentSatProp/ClausiusClapeyron/ClausiusClapeyron.C
+phaseChange/saturationProperties/singleComponentSatProp/singleComponentFunction/singleComponentFunction.C
+/* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
+
+
+/* * * * * * * * * * * TwoPhaseFlow --> surfaceForces  * * * * * * * * * * * */
+surfaceForces/surfaceForces.C
+
+surfaceForces/surfaceTensionForceModels/surfaceTensionForceModel/surfaceTensionForceModel.C
+surfaceForces/surfaceTensionForceModels/surfaceTensionForceModel/surfaceTensionForceModels.C
+
+surfaceForces/surfaceTensionForceModels/surfaceTensionForceModel/RDF/RDF.C
+surfaceForces/surfaceTensionForceModels/surfaceTensionForceModel/gradAlpha/gradAlpha.C
+
+surfaceForces/surfaceTensionForceModels/surfaceTensionForceModel/fitParaboloid/multiDimPolyFitter/multiDimPolyFunctions/paraboloid.C
+surfaceForces/surfaceTensionForceModels/surfaceTensionForceModel/fitParaboloid/multiDimPolyFitter/leastSquareFitParabolid.C
+surfaceForces/surfaceTensionForceModels/surfaceTensionForceModel/fitParaboloid/fitParaboloid.C
+
+surfaceForces/surfaceTensionForceModels/surfaceTensionForceModel/heightFunction/markInterfaceRegion/markInterfaceRegion.C
+surfaceForces/surfaceTensionForceModels/surfaceTensionForceModel/heightFunction/heightFuncStencil/HFStencil.C
+surfaceForces/surfaceTensionForceModels/surfaceTensionForceModel/heightFunction/twoDimFDStencil/twoDimFDStencil.C
+surfaceForces/surfaceTensionForceModels/surfaceTensionForceModel/heightFunction/heightFunction.C
+
+surfaceForces/surfaceTensionForceModels/surfaceTensionForceModel/constantCurvature/constantCurvature.C
+
+surfaceForces/surfaceTensionForceModels/surfaceTensionModels/surfaceTensionModel.C
+
+surfaceForces/accelerationForceModel/accelerationForceModel.C
+surfaceForces/accelerationForceModel/accelerationForceModels.C
+surfaceForces/accelerationForceModel/gravity/gravity.C
+
+surfaceForces/deltaFunctions/deltaFunctionModel.C
+surfaceForces/deltaFunctions/newDeltaFunctionModel.C
+surfaceForces/deltaFunctions/alphaCSF/alphaCSF.C
+/* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
+
+
+LIB = $(FOAM_USER_LIBBIN)/libTwoPhaseFlow

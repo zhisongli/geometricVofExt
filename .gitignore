@@ -44,7 +44,8 @@ platforms/
 /.vscode/
 
 # Solvers not ready for release
-/applications/solvers/interPlicCondensatingEvaporatingFoam
+/applications/solvers/interPlicBoilingFoam
+/applications/solvers/chtPlicBoilingFoam
 /applications/solvers/interPlicCondensatingEvaporatingOnePhaseFoam
 /applications/solvers/chtMultiRegionInterPlicCondensatingEvaporatingFoam
 /applications/test/calcExactVofFieldForSphericalShapeInHexMesh

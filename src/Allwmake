@@ -28,6 +28,9 @@ else
     echo "    >> WARNING: CGAL is not found, cannot build CGALVof, skip"
 fi
 
+echo -n "    >> "
+wmake libso phaseChange/boiling/TwoPhaseFlow
+
 echo " >> Done"
 echo
 

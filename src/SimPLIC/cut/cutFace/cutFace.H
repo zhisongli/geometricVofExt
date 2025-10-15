@@ -159,6 +159,7 @@ public:
         //- Calculate time integrated flux for a face
         scalar timeIntegratedArea
         (
+            const label faceI,
             const pointField& fPts, // face points
             const vector& normal,
             const scalar distance,
@@ -166,6 +167,35 @@ public:
             const scalar Un0,
             const scalar dt,
             const scalar magSf
+        );
+
+        //- For face with vertices p calculate its area and integrated area
+        //  between isocutting lines with isovalues f0 and f1 given vertex
+        //  values f
+        void quadAreaCoeffs
+        (
+            const DynamicList<point>& pf0,
+            const DynamicList<point>& pf1,
+            scalar& quadArea,
+            scalar& intQuadArea
+        ) const;
+
+        //- Get cutPoints of face
+        void cutPoints
+        (
+            const label faceI,
+            const scalar f0,
+            const scalarField& pTimes,
+            DynamicList<point>& cutPoints
+        );
+
+        //- Get cutPoints of face
+        void cutPoints
+        (
+            const pointField& pts,
+            const scalarField& f,
+            const scalar f0,
+            DynamicList<point>& cutPoints
         );
 
         //- Returns centre of cutted face

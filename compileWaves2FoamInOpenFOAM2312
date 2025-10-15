@@ -67,7 +67,7 @@ echo "*********** Compile waves2Foam in OpenFOAM v2312 (optional) ************"
 echo
 
 #------------------------------------------------------------------------------
-# Compile GSL library 
+# Compile GSL library
 echo "--------------------"
 echo "    Compile GSL"
 echo "--------------------"

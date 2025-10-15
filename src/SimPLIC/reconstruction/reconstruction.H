@@ -174,6 +174,9 @@ private:
             //- Face flatness
             surfaceScalarField zeta_;
 
+            //- Is interface cell?
+            boolList interfaceCell_;
+
 
         // Execution performance
 
@@ -202,7 +205,14 @@ private:
             cutCell cutCell_;
 
 
+        //- Store timeindex/iteration to avoid multiple reconstruction
+        mutable Pair<label> timeIndexAndIter_;
+
+
     // Private Member Functions
+
+        //- Is the interface already up-to-date?
+        bool alreadyReconstructed(bool forceUpdate = true) const;
 
         //- No copy construct
         reconstruction(const reconstruction&) = delete;
@@ -228,7 +238,6 @@ private:
                 void isoInterfaceGrad
                 (
                     const volScalarField& phi,
-                    boolList& isMixedCell,
                     DynamicField<vector>& interfaceNormal
                 );
 
@@ -270,7 +279,7 @@ public:
         void initialize();
 
         //- Reconstruct interface in mixed cells
-        void reconstruct();
+        void reconstruct(bool forceUpdate = true);
 
         //- Geometric interpolation of the alpha field in dynamic meshes
         void mapAlphaField();
@@ -366,6 +375,18 @@ public:
             volVectorField& interfaceS()
             {
                 return interfaceS_;
+            }
+
+            //- return interfaceCell_
+            const boolList& interfaceCell() const
+            {
+                return interfaceCell_;
+            }
+
+             //- return interfaceCell_
+            boolList& interfaceCell()
+            {
+                return interfaceCell_;
             }
 
             //- Return alpha field

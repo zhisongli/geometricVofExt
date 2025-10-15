@@ -13,8 +13,10 @@ EXE_INC = \
 EXE_LIBS = \
     -lfiniteVolume \
     -lmeshTools \
+    -lsurfMesh \
     -lsampling \
     -ldynamicFvMesh \
+    -ldynamicMesh \
     -loverset \
     -ltwoPhaseMixture \
     -ltwoPhaseProperties

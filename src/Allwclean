@@ -10,4 +10,6 @@ wclean libso SimPLIC
 
 wclean libso CGALVof
 
+wclean libso phaseChange/boiling/TwoPhaseFlow
+
 #------------------------------------------------------------------------------

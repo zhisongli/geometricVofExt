@@ -87,7 +87,7 @@ int main(int argc, char *argv[])
         runTime.setTime(args.get<scalar>("time"), 1);
     }
 
-    #include "createDynamicFvMesh.H"
+    #include "createNamedDynamicFvMesh.H"
 
     scalar startTime(omp_get_wtime());
 

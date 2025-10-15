@@ -300,6 +300,7 @@ Foam::scalar Foam::geometricVofExt::SimPLIC::cutFace::timeIntegratedFaceFlux
             dVf = phi / magSf *
                 timeIntegratedArea
                 (
+                    faceI,
                     fPts,
                     normal,
                     distance,
@@ -335,6 +336,7 @@ Foam::scalar Foam::geometricVofExt::SimPLIC::cutFace::timeIntegratedFaceFlux
                 dVf += phiTri / magSfTri * 
                     timeIntegratedArea
                     (
+                        faceI,
                         fPtsTri,
                         normal,
                         distance,
@@ -391,6 +393,7 @@ Foam::scalar Foam::geometricVofExt::SimPLIC::cutFace::timeIntegratedFaceFlux
 
 Foam::scalar Foam::geometricVofExt::SimPLIC::cutFace::timeIntegratedArea
 (
+    const label faceI,
     const pointField& fPts, // face points
     const vector& normal,
     const scalar distance,
@@ -428,7 +431,7 @@ Foam::scalar Foam::geometricVofExt::SimPLIC::cutFace::timeIntegratedArea
         // If all cuttings are in the future but non of them within [0, dt]
         // then if cell is filling up (Un0 > 0) face must be empty during
         // whole time interval
-        tIntArea = magSf * dt * (1.0 - pos0(Un0));
+        tIntArea = magSf * dt * neg(Un0);
         return tIntArea;
     }
 
@@ -445,7 +448,7 @@ Foam::scalar Foam::geometricVofExt::SimPLIC::cutFace::timeIntegratedArea
         // [0, firstTime] and hence fully submerged in fluid A or B.
         // If Un0 > 0 cell is filling up and it must initially be empty.
         // If Un0 < 0 cell must initially be fully immersed in fluid A (liquid).
-        subAreaOld = magSf * (scalar(1) - pos0(Un0));
+        subAreaOld = magSf * neg(Un0);
         tIntArea = subAreaOld * firstTime;
         sortedTimes.append(firstTime);
         prevTime = firstTime;
@@ -460,13 +463,14 @@ Foam::scalar Foam::geometricVofExt::SimPLIC::cutFace::timeIntegratedArea
         subAreaOld = mag(subFaceArea_);
     }
 
-    const scalar smallTime(max(TSMALL/mag(Un0), TSMALL));
+    //const scalar smallTime(max(TSMALL/mag(Un0), TSMALL));
+    const scalar smallTime = max(1e-6*dt, TSMALL);
 
     forAll(order, ti)
     {
         const scalar timeI(pTimes[order[ti]]);
 
-        if ( timeI > (prevTime + smallTime) && timeI < dt)
+        if ( timeI > (prevTime + smallTime) && timeI <= dt)
         {
             sortedTimes.append(timeI);
             prevTime = timeI;
@@ -505,5 +509,358 @@ Foam::scalar Foam::geometricVofExt::SimPLIC::cutFace::timeIntegratedArea
     return tIntArea;
 }
 
+
+// Foam::scalar Foam::geometricVofExt::SimPLIC::cutFace::timeIntegratedArea
+// (
+//     const label faceI,
+//     const pointField& fPts, // face points
+//     const vector& normal,
+//     const scalar distance,
+//     const scalarField& pTimes,
+//     const scalar Un0,
+//     const scalar dt,
+//     const scalar magSf
+// )
+// {
+//     const scalar TSMALL(10.0 * SMALL);
+
+//     // Initialize time integrated area returned by this function
+//     scalar tIntArea(0.0);
+
+//     // Finding ordering of vertex points
+//     const labelList order(Foam::sortedOrder(pTimes));
+//     const scalar firstTime(pTimes[order.first()]);
+//     const scalar lastTime(pTimes[order.last()]);
+
+//     // Dealing with case where face is not cut by interface during time
+//     // interval [0, dt] because face was already passed by interface
+//     if (lastTime <= 0.0)
+//     {
+//         // If all face cuttings were in the past and cell is filling up (Un0>0)
+//         // then face must be full during whole time interval
+//         tIntArea = magSf * dt * pos0(Un0);
+//         return tIntArea;
+//     }
+
+//     // Dealing with case where face is not cut by interface during time
+//     // interval [0, dt] because dt is too small for interface to reach closest
+//     // face point
+//     if (firstTime >= dt)
+//     {
+//         // If all cuttings are in the future but non of them within [0, dt]
+//         // then if cell is filling up (Un0 > 0) face must be empty during
+//         // whole time interval
+//         tIntArea = magSf * dt * neg(Un0);
+//         return tIntArea;
+//     }
+
+//     // If we reach this point in the code some part of the face will be swept
+//     // during [tSmall, dt-tSmall]. However, it may be the case that there are no
+//     // vertex times within the interval. This will happen sometimes for small
+//     // time steps where both the initial and the final face-interface
+//     // intersection line (FIIL) will be along the same two edges.
+
+//     // Face-interface intersection line (FIIL) to be swept across face
+//     DynamicList<point> FIIL(3);
+//     // Submerged area at beginning of each sub time interval time
+//     scalar initialArea = 0.0;
+//     // Running time keeper variable for the integration process
+//     scalar time = 0.0;
+
+//     // Special treatment of first sub time interval
+//     if (firstTime > 0.0)
+//     {
+//         // If firstTime > 0 the face is uncut in the time interval
+//         // [0, firstTime] and hence fully submerged in fluid A or B.
+//         // If Un0 > 0 cell is filling up and it must initially be empty.
+//         // If Un0 < 0 cell must initially be fully immersed in fluid A (liquid).
+//         time = firstTime;
+//         initialArea = magSf * neg(Un0);
+//         tIntArea = initialArea * time;
+//         cutPoints(faceI, time, pTimes, FIIL);
+//     }
+//     else
+//     {
+//         // If firstTime <= 0 then face is initially cut and we must
+//         // calculate the initial submerged area and FIIL:
+//         time = 0.0;
+//         // Note: calcSubFace assumes well-defined 2-point FIIL!!!!
+//         calcSubFace(fPts, normal, distance);
+//         initialArea = mag(subFaceArea());
+//         cutPoints(faceI, time, pTimes, FIIL);
+//     }
+
+//     // Making sorted array of all vertex times that are between max(0,firstTime)
+//     // and dt and further than tSmall from the previous time.
+//     DynamicList<scalar> sortedTimes(pTimes.size());
+//     {
+//         scalar prevTime = time;
+//         const scalar tSmall = max(1e-6*dt, 10*SMALL);
+//         for (const label oI : order)
+//         {
+//             const scalar timeI = pTimes[oI];
+//             if (timeI > prevTime + tSmall && timeI <= dt)
+//             {
+//                 sortedTimes.append(timeI);
+//                 prevTime = timeI;
+//             }
+//         }
+//     }
+
+//     // Sweeping all quadrilaterals corresponding to the intervals defined above
+//     for (const scalar newTime : sortedTimes)
+//     {
+//         // New face-interface intersection line
+//         DynamicList<point> newFIIL(3);
+//         cutPoints(faceI, newTime, pTimes, newFIIL);
+
+//         // quadrilateral area coefficients
+//         scalar alpha = 0, beta = 0;
+
+//         quadAreaCoeffs(FIIL, newFIIL, alpha, beta);
+//         // Integration of area(t) = A*t^2+B*t from t = 0 to 1
+//         tIntArea +=
+//             (newTime - time)
+//           * (initialArea + sign(Un0)
+//           * (alpha / 3.0 + 0.5 * beta));
+//         // Adding quad area to submerged area
+//         initialArea += sign(Un0) * (alpha + beta);
+
+//         FIIL = newFIIL;
+//         time = newTime;
+//     }
+
+//     if (lastTime > dt)
+//     {
+//         // FIIL will end up cutting the face at dt
+//         // New face-interface intersection line
+//         DynamicList<point> newFIIL(3);
+//         cutPoints(faceI, dt, pTimes, newFIIL);
+
+//         // quadrilateral area coefficients
+//         scalar alpha = 0, beta = 0;
+//         quadAreaCoeffs(FIIL, newFIIL, alpha, beta);
+//         // Integration of area(t) = A*t^2+B*t from t = 0 to 1
+//         tIntArea +=
+//             (dt - time)
+//           * (initialArea + sign(Un0) * (alpha / 3.0 + 0.5 * beta));
+//     }
+//     else
+//     {
+//         // Interface will leave the face at lastTime and face will be fully
+//         // in fluid A or fluid B in the time interval from lastTime to dt.
+//         tIntArea += magSf * (dt - lastTime) * pos0(Un0);
+//     }
+
+//     return tIntArea;
+// }
+
+
+void Foam::geometricVofExt::SimPLIC::cutFace::quadAreaCoeffs
+(
+    const DynamicList<point>& pf0,
+    const DynamicList<point>& pf1,
+    scalar& alpha,
+    scalar& beta
+) const
+{
+    // Number of points in provided face-interface intersection lines
+    const label np0 = pf0.size();
+    const label np1 = pf1.size();
+
+    // quad area coeffs such that area(t) = alpha*t^2 + beta*t.
+    // With time interval normalised, we have full quadArea = alpha + beta
+    // and time integrated quad area = alpha/3 + beta/2;
+    alpha = 0.0;
+    beta = 0.0;
+
+    if (np0 && np1)
+    {
+        // Initialising quadrilateral vertices A, B, C and D
+        vector A(pf0[0]);
+        vector C(pf1[0]);
+        vector B(pf0[0]);
+        vector D(pf1[0]);
+
+        if (np0 == 2)
+        {
+            B = pf0[1];
+        }
+        else if (np0 > 2)
+        {
+            WarningInFunction << "Vertex face was cut at pf0 = " << pf0 << endl;
+        }
+
+        if (np1 == 2)
+        {
+            D = pf1[1];
+        }
+        else if (np1 > 2)
+        {
+            WarningInFunction << "Vertex face was cut at pf1 = " << pf1 << endl;
+        }
+
+        // Swapping pf1 points if pf0 and pf1 point in same general direction
+        // (because we want a quadrilateral ABCD where pf0 = AB and pf1 = CD)
+        if (((B - A) & (D - C)) > 0)
+        {
+            vector tmp = D;
+            D = C;
+            C = tmp;
+        }
+
+        // Defining local coordinates (xhat, yhat) for area integration of swept
+        // quadrilateral ABCD such that A = (0,0), B = (Bx,0), C = (Cx,Cy) and
+        // D = (Dx,Dy) with Cy = 0 and Dy > 0.
+
+        const scalar Bx = mag(B - A);
+
+        vector xhat(Zero);
+        if (Bx > 10 * SMALL)
+        {
+            // If |AB| > 0 ABCD we use AB to define xhat
+            xhat = (B - A) / mag(B - A);
+        }
+        else if (mag(C - D) > 10 * SMALL)
+        {
+            // If |AB| ~ 0 ABCD is a triangle ACD and we use CD for xhat
+            xhat = (C - D) / mag(C - D);
+        }
+        else
+        {
+            return;
+        }
+
+        // Defining vertical axis in local coordinates
+        vector yhat = D - A;
+        yhat -= ((yhat & xhat) * xhat);
+
+        if (mag(yhat) > 10 * SMALL)
+        {
+            yhat /= mag(yhat);
+
+            const scalar Cx = (C - A) & xhat;
+            const scalar Cy = mag((C - A) & yhat);
+            const scalar Dx = (D - A) & xhat;
+            const scalar Dy = mag((D - A) & yhat);
+
+            // area = ((Cx - Bx)*Dy - Dx*Cy)/6.0 + 0.25*Bx*(Dy + Cy);
+            alpha = 0.5 * ((Cx - Bx) * Dy - Dx * Cy);
+            beta = 0.5 * Bx * (Dy + Cy);
+        }
+    }
+    else
+    {
+        WarningInFunction
+            << "Vertex face was cut at " << pf0 << " and at "
+            << pf1 << endl;
+    }
+}
+
+
+void Foam::geometricVofExt::SimPLIC::cutFace::cutPoints
+(
+    const label faceI,
+    const scalar f0,
+    const scalarField& pTimes,
+    DynamicList<point>& cutPoints
+)
+{
+    const face& f = mesh_.faces()[faceI];
+    const label nPoints = f.size();
+    scalar f1(pTimes[0]);
+
+    // Snapping vertex value to f0 if very close (needed for 2D cases)
+    if (mag(f1 - f0) < 10 * SMALL)
+    {
+        f1 = f0;
+    }
+
+    forAll(f, pi)
+    {
+        label pi2 = (pi + 1) % nPoints;
+        scalar f2 = pTimes[pi2];
+
+        // Snapping vertex value
+        if (mag(f2 - f0) < 10 * SMALL)
+        {
+            f2 = f0;
+        }
+
+        if ((f1 < f0 && f2 > f0) || (f1 > f0 && f2 < f0))
+        {
+            const scalar s = (f0 - f1) / (f2 - f1);
+            cutPoints.append
+            (
+                mesh_.points()[f[pi]]
+              + s*(mesh_.points()[f[pi2]] - mesh_.points()[f[pi]])
+            );
+        }
+        else if (f1 == f0)
+        {
+            cutPoints.append(mesh_.points()[f[pi]]);
+        }
+        f1 = f2;
+    }
+
+    if (cutPoints.size() > 2)
+    {
+        WarningInFunction
+            << "cutPoints = " << cutPoints
+            << " for pts = " << f.points(mesh_.points())
+            << ", f - f0 = " << f - f0 << " and f0 = " << f0
+            << endl;
+    }
+}
+
+
+void Foam::geometricVofExt::SimPLIC::cutFace::cutPoints
+(
+    const pointField& pts,
+    const scalarField& f,
+    const scalar f0,
+    DynamicList<point>& cutPoints
+)
+{
+    const label nPoints = pts.size();
+    scalar f1(f[0]);
+
+    // Snapping vertex value to f0 if very close (needed for 2D cases)
+    if (mag(f1 - f0) < 10 * SMALL)
+    {
+        f1 = f0;
+    }
+
+    forAll(pts, pi)
+    {
+        label pi2 = (pi + 1) % nPoints;
+        scalar f2 = f[pi2];
+
+        // Snapping vertex value
+        if (mag(f2 - f0) < 10 * SMALL)
+        {
+            f2 = f0;
+        }
+
+        if ((f1 < f0 && f2 > f0) || (f1 > f0 && f2 < f0))
+        {
+            const scalar s = (f0 - f1) / (f2 - f1);
+            cutPoints.append(pts[pi] + s * (pts[pi2] - pts[pi]));
+        }
+        else if (f1 == f0)
+        {
+            cutPoints.append(pts[pi]);
+        }
+        f1 = f2;
+    }
+
+    if (cutPoints.size() > 2)
+    {
+        WarningInFunction
+            << "cutPoints = " << cutPoints << " for pts = " << pts
+            << ", f - f0 = " << f - f0 << " and f0 = " << f0
+            << endl;
+    }
+}
 
 // ************************************************************************* //
