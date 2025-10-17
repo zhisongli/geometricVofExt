@@ -1283,7 +1283,6 @@ bool Foam::dynamicRefine2DFvMesh::init(const bool doInit)
                     {
                         neighbourLevelSum += cellLevel[faceNeighbour()[cfacei]+faceOwner()[cfacei]-celli];
                     }
-                    
                 }
 
                 for (const label cfacei : cFaces)
