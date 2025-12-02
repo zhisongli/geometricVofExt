@@ -27,7 +27,8 @@ License
 \*---------------------------------------------------------------------------*/
 
 #include "surfaceMeshBooleanOperation.H"
-
+// 在 * * * * * * * * * * * * * * Static Data Members * * * * * * * * * * * * * // 部分后添加
+static const Foam::geometricVofExt::CGALVof::CGALSurfaceMesh emptySurface;  // 默认空网格，确保 CGALSurfaceMesh 有默认 ctor
 // * * * * * * * * * * * * * * Static Data Members * * * * * * * * * * * * * //
 
 const char* const Foam::geometricVofExt::CGALVof::surfaceMeshBooleanOperation::typeName
@@ -49,10 +50,19 @@ Foam::geometricVofExt::CGALVof::surfaceMeshBooleanOperation::validActions
 
 // * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //
 
+// Foam::geometricVofExt::CGALVof::surfaceMeshBooleanOperation::surfaceMeshBooleanOperation()
+// :
+//     surface1_(CGALSurfaceMesh()),
+//     surface2_(CGALSurfaceMesh()),
+//     action_(word("intersection")),
+//     boolSurface_(CMesh()),
+//     isValid_(false)
+// {}
+
 Foam::geometricVofExt::CGALVof::surfaceMeshBooleanOperation::surfaceMeshBooleanOperation()
 :
-    surface1_(CGALSurfaceMesh()),
-    surface2_(CGALSurfaceMesh()),
+    surface1_(emptySurface),  // 绑定到静态空对象
+    surface2_(emptySurface),
     action_(word("intersection")),
     boolSurface_(CMesh()),
     isValid_(false)
