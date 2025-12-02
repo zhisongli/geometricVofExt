@@ -21,6 +21,7 @@ echo " >> Starting clean ${WM_PROJECT_USER_DIR##*/}/modules/geometricVofExt ${0#
 # echo "    ${WM_OPTIONS}, with ${WM_MPLIB} ${FOAM_MPI}"
 echo
 
+[ -f log.linux64IcxDPInt32Opt ] && rm -f log.linux64IcxDPInt32Opt
 
 # geometricVofExt libraries
 src/Allwclean $targetType $*
