@@ -123,7 +123,7 @@ rm -rf ./platforms/$WM_ARCH$WM_COMPILER/CGAL-*
 
 
 # Build
-./makeGcc gcc-system gmp-${gmpV} mpfr-${mpfrV} mpc-${mpcV}
+./makeGcc gcc-system gmp-${gmpV} mpfr-${mpfrV} mpc-${mpcV} 
 ./makeCGAL -with-lib gmp-${gmpV} mpfr-${mpfrV}
 
 echo
