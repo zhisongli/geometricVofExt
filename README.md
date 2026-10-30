@@ -1,6 +1,6 @@
 <h1 align="center"><img src="./images/logo_alpha.png" width="160px"><br><tt>geometricVofExt</tt></h1>
 
-![](https://flat.badgen.net/badge/OpenFOAM/v2312/blue?icon=&)
+![](https://flat.badgen.net/badge/OpenFOAM/v2512/blue?icon=&)
 ![](https://flat.badgen.net/github/license/daidezhi/geometricVofExt/?&label=License)
 ![](https://flat.badgen.net/github/tags/daidezhi/geometricVofExt/&label=Tags)
 ![](https://flat.badgen.net/github/tag/daidezhi/geometricVofExt/?&label=Latest%20tag)
@@ -10,7 +10,8 @@
 ![](https://flat.badgen.net/github/stars/daidezhi/geometricVofExt/?&label=Stars)
 [![DOI](https://zenodo.org/badge/754320637.svg)](https://zenodo.org/doi/10.5281/zenodo.11212396)
 [![wakatime](https://wakatime.com/badge/user/6b903f99-c4b9-4825-90df-c379c4b8be5a/project/018d877e-d316-48ac-9cd1-fb7c60545c68.svg)](https://wakatime.com/badge/user/6b903f99-c4b9-4825-90df-c379c4b8be5a/project/018d877e-d316-48ac-9cd1-fb7c60545c68)
-![](https://flat.badgen.net/github/forks/daidezhi/geometricVofExt?&label=Forks)
+
+<!-- ![](https://flat.badgen.net/github/forks/daidezhi/geometricVofExt?&label=Forks) -->
 
 
 ## Overview
@@ -115,12 +116,12 @@ The following are solvers that utilize the SimPLIC method:
 
 ### Compatibility
 
-The source code of `geometricVofExt` is developed and maintained for [`OpenFOAM v2312`](https://www.openfoam.com/news/main-news/openfoam-v2312).
+The source code of `geometricVofExt` is developed and maintained for [`OpenFOAM v2512`](https://www.openfoam.com/news/main-news/openfoam-v2512).
 
 
 ### Before Starting
 
-* Make sure that [`OpenFOAM v2312`](https://develop.openfoam.com/Development/openfoam/blob/develop/doc/Build.md) has been compiled successfully on the target machine.
+* Make sure that [`OpenFOAM v2512`](https://develop.openfoam.com/Development/openfoam/blob/develop/doc/Build.md) has been compiled successfully on the target machine.
 
 * Verify that [`CGAL`](https://develop.openfoam.com/Development/openfoam/blob/develop/doc/Requirements.md) has been successfully compiled/loaded. Otherwise, the `CGALVof` library, `setVofField` and `setShapedFields` will not be compiled.
 
@@ -130,7 +131,7 @@ The source code of `geometricVofExt` is developed and maintained for [`OpenFOAM 
 * Create a directory named `modules` within `$WM_PROJECT_USER_DIR`, then proceed to download the `geometricVofExt` source code into `$WM_PROJECT_USER_DIR/modules`, *i.e.*,
 
 ```shell
-source <installation path>/OpenFOAM-v2312/etc/bashrc
+source <installation path>/OpenFOAM-v2512/etc/bashrc
 
 [ -d $WM_PROJECT_USER_DIR ] || mkdir $WM_PROJECT_USER_DIR
 cd $WM_PROJECT_USER_DIR
@@ -144,7 +145,7 @@ git clone https://github.com/daidezhi/geometricVofExt.git
 * Check `CGAL` library:
 
 ```shell
-source <installation path>/OpenFOAM-v2312/etc/bashrc
+source <installation path>/OpenFOAM-v2512/etc/bashrc
 
 cd $WM_PROJECT_USER_DIR/modules/geometricVofExt
 
@@ -154,7 +155,7 @@ cd $WM_PROJECT_USER_DIR/modules/geometricVofExt
 :warning: **IMPORTANT** :warning: The GNU Multiple Precision Arithmetic (`GMP`) and GNU Multiple Precision Floating-Point Reliably (`MPFR`) Libraries are highly recommended for use with `CGAL`. Otherwise, the `setVofField` and `setShapedFields` utilities will operate in a low-efficiency mode. If you are using a GCC compiler, one potential solution is:
 
 ```shell
-source <installation path>/OpenFOAM-v2312/etc/bashrc
+source <installation path>/OpenFOAM-v2512/etc/bashrc
 
 cd $WM_PROJECT_USER_DIR/modules/geometricVofExt
 
@@ -164,7 +165,7 @@ cd $WM_PROJECT_USER_DIR/modules/geometricVofExt
 * (Optional) Enable the utilities and solvers to produce iso-surfaces/plic-surfaces at the initial time (*e.g.*, $t = 0$):
 
 ```shell
-source <installation path>/OpenFOAM-v2312/etc/bashrc
+source <installation path>/OpenFOAM-v2512/etc/bashrc
 
 cd $WM_PROJECT_USER_DIR/modules/geometricVofExt
 
@@ -174,7 +175,7 @@ cd $WM_PROJECT_USER_DIR/modules/geometricVofExt
 * Compile libraries, utilities and solvers of `geometricVofExt`:
 
 ```shell
-source <installation path>/OpenFOAM-v2312/etc/bashrc
+source <installation path>/OpenFOAM-v2512/etc/bashrc
 
 cd $WM_PROJECT_USER_DIR/modules/geometricVofExt
 
@@ -183,7 +184,7 @@ cd $WM_PROJECT_USER_DIR/modules/geometricVofExt
 
 * (Optional) Build `waves2Foam` library and `wavePlicFoam` solver (*It is important to mention that the Gnu Scientific Library (GSL) `2.7.1` is locally compiled for HPC users.*):
 ```shell
-source <installation path>/OpenFOAM-v2312/etc/bashrc
+source <installation path>/OpenFOAM-v2512/etc/bashrc
 
 cd $WM_PROJECT_USER_DIR/modules/geometricVofExt
 
@@ -195,7 +196,7 @@ cd $WM_PROJECT_USER_DIR/modules/geometricVofExt
 * (Optional) Build utilities/solvers in `applications/test`:
 
 ```shell
-source <installation path>/OpenFOAM-v2312/etc/bashrc
+source <installation path>/OpenFOAM-v2512/etc/bashrc
 
 cd $WM_PROJECT_USER_DIR/modules/geometricVofExt
 
@@ -207,7 +208,7 @@ cd $WM_PROJECT_USER_DIR/modules/geometricVofExt
 
 ## Gallery
 
-<!-- |<video src="https://github.com/daidezhi/geometricVofExt/assets/12741725/1855996e-3775-4d15-9a02-9aecd9340470">|
+|<video src="https://github.com/daidezhi/geometricVofExt/assets/12741725/1855996e-3775-4d15-9a02-9aecd9340470">|
 |:---:|
 |3Dwave|
 
@@ -221,7 +222,7 @@ cd $WM_PROJECT_USER_DIR/modules/geometricVofExt
 
 |<video src="https://github.com/daidezhi/geometricVofExt/assets/12741725/3c5d3191-cd9b-4f31-8ba5-f81bcb1612d6">|
 |:---:|
-|Cavitation| -->
+|Cavitation|
 
 
 ## Tutorials
@@ -288,6 +289,9 @@ cd $WM_PROJECT_USER_DIR/modules/geometricVofExt
 
 ## Change Log
 
+* 12/24/2025. Update to `OpenFOAM-v2512`.
+* 10/16/2025. Add `dynamicRefine2DFvMesh` lib for 2D AMR.
+* 10/15/2025. Integrate DLR `TwoPhaseFlow` (https://github.com/DLR-RY/TwoPhaseFlow) library to support boiling simulations.
 * 06/23/2025. Fix missing credit to isoAdvector. [#2](https://github.com/daidezhi/geometricVofExt/issues/2).
 * 06/25/2024. Add support for [waves2Foam](https://github.com/ogoe/waves2Foam). The associated solver `wavePlicFoam` is also available.
 * 05/13/2024. Initial release.

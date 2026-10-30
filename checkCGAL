@@ -17,7 +17,9 @@ echo
 # from CFD-China. for OpenFOAM e.g., 2506
 # mkdir -p "$WM_PROJECT_DIR/wmake/rules/General" && \
     # echo "include \$(GENERAL_RULES)/cgal" > "$WM_PROJECT_DIR/wmake/rules/General/CGAL" 
-echo "include \$(GENERAL_RULES)/cgal" > "$WM_PROJECT_DIR/wmake/rules/General/CGAL"
+# Not needed since the Make/options use $(GENERAL_RULES)/cgal (official
+# 32e6fa2); kept commented so the OpenFOAM installation is not modified.
+# echo "include \$(GENERAL_RULES)/cgal" > "$WM_PROJECT_DIR/wmake/rules/General/CGAL"
 
 
 if have_cgal; then
