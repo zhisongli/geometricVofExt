@@ -1,0 +1,34 @@
+CGAL 4.14.3: CGAL/boost/graph/iterator.h fails to compile with the Intel
+ICX compiler (clang-based) at this->base() == NULL in operator bool_type().
+Compare the iterator itself with NULL instead (3 places).
+Apply in $CGAL_ARCH_PATH/include with: patch -p1 < <this file>
+
+--- a/CGAL/boost/graph/iterator.h	2026-10-30 18:45:14
++++ b/CGAL/boost/graph/iterator.h	2026-10-30 18:45:14
+@@ -230,7 +230,7 @@
+ 
+   operator bool_type() const
+   {
+-    return (! (this->base() == NULL)) ?
++    return (! (*this == NULL)) ?
+       &Halfedge_around_source_iterator::this_type_does_not_support_comparisons : 0;
+   }
+ 
+@@ -330,7 +330,7 @@
+ 
+   operator bool_type() const
+   {
+-    return (! (this->base() == NULL)) ?
++    return (! (*this == NULL)) ?
+       &Halfedge_around_target_iterator::this_type_does_not_support_comparisons : 0;
+   }
+ 
+@@ -429,7 +429,7 @@
+ 
+   operator bool_type() const
+   {
+-    return (! (this->base() == NULL)) ?
++    return (! (*this == NULL)) ?
+       &Halfedge_around_face_iterator::this_type_does_not_support_comparisons : 0;
+   }
+ 
