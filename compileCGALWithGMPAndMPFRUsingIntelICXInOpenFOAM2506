@@ -1,0 +1,202 @@
+#!/bin/bash
+# Run from geometricVofExt top-level directory only
+cd "${0%/*}" || exit
+wmake -check-dir "$WM_PROJECT_USER_DIR/modules/geometricVofExt" 2>/dev/null || {
+    echo "Error (${0##*/}) : not located in \$WM_PROJECT_USER_DIR/modules/geometricVofExt"
+    echo "    Check your OpenFOAM environment and installation"
+    exit 1
+}
+#------------------------------------------------------------------------------
+
+echo
+echo "*********** Compile CGAL with GMP and MPFR Using Intel Compiler ************"
+echo
+
+# GMP, MPFR and MPC are built with the system GCC, CGAL with Intel ICX.
+# Written for OpenFOAM v2506 (the awk patterns below follow its
+# etc/config.sh/compiler and etc/config.sh/settings).
+# A tarball found in ThirdParty/ of this package is used instead of
+# downloading it (for machines without internet access).
+gmpV=6.2.1
+mpfrV=4.2.2
+mpcV=1.3.1
+
+# Intel oneAPI environment
+oneapiSetvars=${ONEAPI_SETVARS:-${HOME}/intel/oneapi/setvars.sh}
+
+# change to intel compilers
+export WM_COMPILER=Icx
+source $WM_PROJECT_DIR/etc/bashrc
+
+# Modify $WM_PROJECT_DIR/etc/config.sh/compiler
+[ -f $WM_PROJECT_DIR/etc/config.sh/compiler_backup ] || cp $WM_PROJECT_DIR/etc/config.sh/compiler $WM_PROJECT_DIR/etc/config.sh/compiler_backup
+
+awk '
+    BEGIN {
+        in_section = 0
+        printed_icx = 0
+    }
+    /case "\$WM_COMPILER_TYPE" in/ {
+        print $0
+        in_section = 1
+        next
+    }
+    /system\)/ && in_section && !printed_icx {
+        # print the original system) section first
+        print
+        # then add the Intel compiler section
+        print ""
+        print "# Added for Intel oneAPI compiler support"
+        print "Icx)"
+        print "    gmp_version=gmp-'"${gmpV}"'"
+        print "    mpfr_version=mpfr-'"${mpfrV}"'"
+        print "    mpc_version=mpc-'"${mpcV}"'"
+        print "    ;;"
+        printed_icx = 1
+        next
+    }
+    /^[[:space:]]*;;/ && in_section {
+        print $0
+        next
+    }
+    /ThirdParty)/ && in_section {
+        print $0
+        in_section = 0
+        next
+    }
+    {
+        print $0
+    }
+' $WM_PROJECT_DIR/etc/config.sh/compiler_backup > $WM_PROJECT_DIR/etc/config.sh/compiler
+
+
+# Modify $WM_PROJECT_DIR/etc/config.sh/settings
+[ -f $WM_PROJECT_DIR/etc/config.sh/settings_backup ] || cp $WM_PROJECT_DIR/etc/config.sh/settings $WM_PROJECT_DIR/etc/config.sh/settings_backup
+
+awk '
+    BEGIN {
+        in_section = 0
+        printed_icx = 0
+    }
+    /case "\$WM_COMPILER_TYPE-\$WM_COMPILER" in/ {
+        print $0
+        in_section = 1
+        next
+    }
+    /system-Gcc\)/ && in_section && !printed_icx {
+        # print the original system-Gcc) section first
+        print
+        # then add the Intel compiler section
+        print ""
+        print "# Added for Intel oneAPI compiler support"
+        print "Icx-Icx)"
+        print "    gmpDir=\"\$archDir/\${gmp_version}\""
+        print "    mpfrDir=\"\$archDir/\${mpfr_version}\""
+        print "    mpcDir=\"\$archDir/\${mpc_version}\""
+        print "    _foamAddLibAuto \"\$gmpDir\" && export GMP_ARCH_PATH=\"\$gmpDir\""
+        print "    _foamAddLibAuto \"\$mpfrDir\" && export MPFR_ARCH_PATH=\"\$mpfrDir\""
+        print "    _foamAddLibAuto \"\$mpcDir\""
+        print "    ;;"
+        printed_icx = 1
+        next
+    }
+    /^[[:space:]]*;;/ && in_section {
+        print $0
+        next
+    }
+    /ThirdParty-Gcc\*\)/ && in_section {
+        print $0
+        in_section = 0
+        next
+    }
+    {
+        print $0
+    }
+' $WM_PROJECT_DIR/etc/config.sh/settings_backup > $WM_PROJECT_DIR/etc/config.sh/settings
+
+
+# Renew env of OpenFOAM
+source $WM_PROJECT_DIR/etc/bashrc
+
+# change to intel compilers
+source "$oneapiSetvars" --force >/dev/null 2>&1
+
+packageDir=$PWD
+
+cd $WM_THIRD_PARTY_DIR
+
+# Get (local copy or download) and unpack GMP, MPFR and MPC
+getSource()
+{
+    # $1 = name-version, $2 = tarball suffix, $3 = download directory
+    if [ ! -f "$1.$2" ]
+    then
+        if [ -f "$packageDir/ThirdParty/$1.$2" ]
+        then
+            cp "$packageDir/ThirdParty/$1.$2" .
+        else
+            wget -nv "$3/$1.$2" --no-check-certificate
+        fi
+    fi
+    [ -d "$1" ] || tar -xf "$1.$2"
+}
+
+getSource gmp-${gmpV} tar.xz https://gmplib.org/download/gmp
+getSource mpfr-${mpfrV} tar.gz https://ftp.gnu.org/gnu/mpfr
+getSource mpc-${mpcV} tar.gz https://ftp.gnu.org/gnu/mpc
+
+
+# Remove old build
+echo "Cleaning old builds for Intel compiler..."
+rm -rf ./build/$WM_ARCH$WM_COMPILER/gmp-${gmpV}
+rm -rf ./build/$WM_ARCH$WM_COMPILER/mpc-${mpcV}
+rm -rf ./build/$WM_ARCH$WM_COMPILER/mpfr-${mpfrV}
+
+rm -rf ./platforms/$WM_ARCH$WM_COMPILER/gmp-${gmpV}
+rm -rf ./platforms/$WM_ARCH$WM_COMPILER/mpc-${mpcV}
+rm -rf ./platforms/$WM_ARCH$WM_COMPILER/mpfr-${mpfrV}
+
+rm -rf ./build/$WM_ARCH$WM_COMPILER/CGAL-*
+
+rm -rf ./platforms/$WM_ARCH$WM_COMPILER/boost_*
+rm -rf ./platforms/$WM_ARCH$WM_COMPILER/CGAL-*
+
+
+# Build with Intel compiler strategy
+echo "Building dependencies with system GCC first..."
+# compile packages with GCC compiler first
+export WM_COMPILER=Gcc
+source $WM_PROJECT_DIR/etc/bashrc
+
+./makeGcc gcc-system gmp-${gmpV} mpfr-${mpfrV} mpc-${mpcV}
+
+echo "Building CGAL with Intel compiler..."
+# change to intel compilers
+export WM_COMPILER=Icx
+source $WM_PROJECT_DIR/etc/bashrc
+source "$oneapiSetvars" --force >/dev/null 2>&1
+
+./makeCGAL -with-lib gmp-${gmpV} mpfr-${mpfrV}
+
+# CGAL 4.14.3 headers need a small fix for ICX (see the patch file)
+cgalPatch="$packageDir/patches/CGAL-4.14.3-iterator-icx.patch"
+case "$CGAL_ARCH_PATH" in
+(*CGAL-4.14.3)
+    if patch --dry-run -s -N -p1 -d "$CGAL_ARCH_PATH/include" < "$cgalPatch" >/dev/null 2>&1
+    then
+        patch -s -N -p1 -d "$CGAL_ARCH_PATH/include" < "$cgalPatch" \
+         && echo "Patched $CGAL_ARCH_PATH/include/CGAL/boost/graph/iterator.h"
+    else
+        echo "iterator.h in $CGAL_ARCH_PATH is already patched or differs, not patched"
+    fi
+    ;;
+(*)
+    echo "CGAL_ARCH_PATH=$CGAL_ARCH_PATH is not CGAL-4.14.3, iterator.h not patched"
+    ;;
+esac
+
+echo
+echo "********************************* Done *********************************"
+echo
+
+#------------------------------------------------------------------------------
