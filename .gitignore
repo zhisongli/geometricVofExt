@@ -91,3 +91,7 @@ doc/Doxygen/DTAGS
 
 # Ignore the test directory
 /tutorialsTest
+
+# Links to OpenFOAM reconstructedDistanceFunction, created by src/Allwmake
+/src/SimPLIC/reconstruction/reconstructedDistanceFunction.C
+/src/SimPLIC/reconstruction/reconstructedDistanceFunction.H
