@@ -30,6 +30,15 @@ License
 
 // * * * * * * * * * * * * * * Static Data Members * * * * * * * * * * * * * //
 
+namespace
+{
+    //- Empty surface referenced by a default-constructed object.
+    //  The reference members must not be bound to temporaries, which are
+    //  destroyed when the constructor returns.
+    const Foam::geometricVofExt::CGALVof::CGALSurfaceMesh emptySurface;
+}
+
+
 const char* const Foam::geometricVofExt::CGALVof::surfaceMeshBooleanOperation::typeName
 =
 "surfaceMeshBooleanOperation";
@@ -51,8 +60,8 @@ Foam::geometricVofExt::CGALVof::surfaceMeshBooleanOperation::validActions
 
 Foam::geometricVofExt::CGALVof::surfaceMeshBooleanOperation::surfaceMeshBooleanOperation()
 :
-    surface1_(CGALSurfaceMesh()),
-    surface2_(CGALSurfaceMesh()),
+    surface1_(emptySurface),
+    surface2_(emptySurface),
     action_(word("intersection")),
     boolSurface_(CMesh()),
     isValid_(false)
