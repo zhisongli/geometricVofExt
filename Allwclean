@@ -1,0 +1,34 @@
+#!/bin/sh
+# Run from geometricVofExt top-level directory only
+cd "${0%/*}" || exit
+wmake -check-dir "$WM_PROJECT_USER_DIR/modules/geometricVofExt" 2>/dev/null || {
+    echo "Error (${0##*/}) : not located in \$WM_PROJECT_USER_DIR/modules/geometricVofExt"
+    echo "    Check your OpenFOAM environment and installation"
+    exit 1
+}
+
+export WM_CONTINUE_ON_ERROR=true
+#------------------------------------------------------------------------------
+
+echo
+echo "******************** Clean geometricVofExt package *********************"
+echo
+echo -n " >> Start time: " && (date "+%Y-%m-%d %H:%M:%S %z" 2>/dev/null || echo "date is unknown")
+echo " >> Starting clean ${WM_PROJECT_USER_DIR##*/}/modules/geometricVofExt ${0##*/}"
+echo
+
+# Log written by ./Allwmake -log
+rm -f "log.${WM_OPTIONS}"
+
+# geometricVofExt libraries
+src/Allwclean
+
+# geometricVofExt applications
+applications/Allwclean
+
+echo -n " >> End time: " && (date "+%Y-%m-%d %H:%M:%S %z" 2>/dev/null || echo "date is unknown")
+echo
+echo "********************************* Done *********************************"
+echo
+
+#------------------------------------------------------------------------------
